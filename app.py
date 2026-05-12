@@ -1,9 +1,3 @@
-"""
-Gradio app for Indian Crop Disease Detector.
-Upload a photo of a crop leaf → model identifies the disease → shows top-5 predictions.
-Using gr.Blocks for maximum stability.
-"""
-
 import os
 import torch
 import torch.nn.functional as F
@@ -12,10 +6,7 @@ from PIL import Image
 import gradio as gr
 from model import create_model
 
-
-# ──────────────────────────────────────────────────
 # CONFIG
-# ──────────────────────────────────────────────────
 MODEL_PATH = "checkpoints/best_model.pth"
 NUM_CLASSES = 38
 IMG_SIZE = 224
@@ -39,18 +30,11 @@ CLASS_NAMES = [
     "Tomato___Tomato_Yellow_Leaf_Curl_Virus", "Tomato___Tomato_mosaic_virus", "Tomato___healthy"
 ]
 
-
-# ──────────────────────────────────────────────────
-# MODEL LOAD
-# ──────────────────────────────────────────────────
 def load_model():
     model = create_model(num_classes=NUM_CLASSES, pretrained=False)
     if os.path.exists(MODEL_PATH):
         state_dict = torch.load(MODEL_PATH, map_location="cpu", weights_only=True)
         model.load_state_dict(state_dict)
-        print(f"✅ Loaded model from {MODEL_PATH}")
-    else:
-        print(f"⚠️  Model file not found at {MODEL_PATH}")
     model.eval()
     return model
 
@@ -62,56 +46,24 @@ preprocess = transforms.Compose([
 
 model = load_model()
 
-
-# ──────────────────────────────────────────────────
-# INFERENCE
-# ──────────────────────────────────────────────────
-def predict(image: Image.Image) -> dict:
-    if image is None:
-        return {}
-    try:
-        print("📸 Preprocessing...")
-        img_tensor = preprocess(image).unsqueeze(0)
-        
-        with torch.no_grad():
-            outputs = model(img_tensor)
-            probabilities = F.softmax(outputs / 2.0, dim=1)[0]
-
-        top5_probs, top5_indices = torch.topk(probabilities, k=5)
-        results = {CLASS_NAMES[idx.item()]: float(prob.item()) for prob, idx in zip(top5_probs, top5_indices)}
-        
-        print(f"✅ Predicted: {list(results.keys())[0]}")
-        return results
-    except Exception as e:
-        print(f"❌ Error: {str(e)}")
-        return {"Error": str(e)}
-
-
-# ──────────────────────────────────────────────────
-# UI DESIGN (Using gr.Blocks)
-# ──────────────────────────────────────────────────
-with gr.Blocks(theme=gr.themes.Soft()) as demo:
-    gr.Markdown("# 🌿 Indian Crop Disease Detector")
-    gr.Markdown("Upload a photo of a crop leaf to identify potential diseases using Deep Learning.")
+def predict(image):
+    if image is None: return {}
+    img_tensor = preprocess(image).unsqueeze(0)
+    with torch.no_grad():
+        outputs = model(img_tensor)
+        # Confidence fix (Temperature Scaling)
+        probabilities = F.softmax(outputs / 2.0, dim=1)[0]
     
-    with gr.Row():
-        with gr.Column():
-            input_img = gr.Image(type="pil", label="📸 Upload Leaf Image")
-            submit_btn = gr.Button("🔍 Detect Disease", variant="primary")
-        
-        with gr.Column():
-            output_label = gr.Label(num_top_classes=5, label="🔍 Prediction Results")
-    
-    gr.Markdown("### 📊 About the Model")
-    gr.Markdown(
-        "Built with **EfficientNet-B0** and trained on the **PlantVillage dataset**.\n"
-        "- **Accuracy:** 98.5% on validation set\n"
-        "- **Classes:** 38 types of diseases across 13 different crops."
-    )
-    
-    # Event listeners
-    submit_btn.click(fn=predict, inputs=input_img, outputs=output_label)
-    input_img.change(fn=predict, inputs=input_img, outputs=output_label)
+    top5_probs, top5_indices = torch.topk(probabilities, k=5)
+    return {CLASS_NAMES[idx.item()]: float(prob.item()) for prob, idx in zip(top5_probs, top5_indices)}
+
+demo = gr.Interface(
+    fn=predict,
+    inputs=gr.Image(type="pil"),
+    outputs=gr.Label(num_top_classes=5),
+    title="Indian Crop Disease Detector",
+    description="Identify diseases in crop leaves."
+)
 
 if __name__ == "__main__":
     demo.launch()
