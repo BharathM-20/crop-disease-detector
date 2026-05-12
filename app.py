@@ -59,10 +59,28 @@ def predict(image):
 
 demo = gr.Interface(
     fn=predict,
-    inputs=gr.Image(type="pil"),
-    outputs=gr.Label(num_top_classes=5),
-    title="Indian Crop Disease Detector",
-    description="Identify diseases in crop leaves."
+    inputs=gr.Image(type="pil", label="📸 Upload a crop leaf image"),
+    outputs=gr.Label(num_top_classes=5, label="🔍 Disease Prediction"),
+    title="🌿 Indian Crop Disease Detector",
+    description=(
+        "Upload a photo of a crop leaf to identify potential diseases. "
+        "This model uses **EfficientNet-B0** with transfer learning, trained on the "
+        "**PlantVillage dataset** (54,000+ images, 38 classes, **98.5% val accuracy**).\n\n"
+        "Supports: Apple, Blueberry, Cherry, Corn, Grape, Orange, Peach, Pepper, "
+        "Potato, Raspberry, Soybean, Squash, Strawberry, Tomato"
+    ),
+    article=(
+        "### About This Project\n"
+        "- **Model:** EfficientNet-B0 with two-phase transfer learning\n"
+        "- **Phase 1:** Classifier head trained (backbone frozen) — Val Acc: 96.1%\n"
+        "- **Phase 2:** Last 2 blocks unfrozen + fine-tuned — Val Acc: **98.5%**\n"
+        "- **Dataset:** [PlantVillage](https://www.kaggle.com/datasets/emmarex/plantdisease) — 54K+ images, 38 classes\n"
+        "- **Training:** Tracked with [W&B](https://wandb.ai/bharathmuthyala62-dayananda-sagar-college-of-engineering/crop-disease-detector)\n"
+        "- **Built by:** Bharath M\n\n"
+        "⚠️ *This is a learning project and NOT a substitute for professional agricultural advice.*"
+    ),
+    theme=gr.themes.Soft(),
+    flagging_mode="never"
 )
 
 if __name__ == "__main__":
