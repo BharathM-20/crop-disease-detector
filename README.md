@@ -2,7 +2,7 @@
 title: Indian Crop Disease Detector
 emoji: 🌿
 colorFrom: green
-colorTo: emerald
+colorTo: green
 sdk: gradio
 sdk_version: 4.36.1
 app_file: app.py
