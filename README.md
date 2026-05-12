@@ -1,3 +1,14 @@
+---
+title: Indian Crop Disease Detector
+emoji: 🌿
+colorFrom: green
+colorTo: emerald
+sdk: gradio
+sdk_version: 4.36.1
+app_file: app.py
+pinned: false
+---
+
 # 🌿 Indian Crop Disease Detector
 
 EfficientNet-B0 trained on PlantVillage dataset — 38 classes, 98.5% val accuracy.
