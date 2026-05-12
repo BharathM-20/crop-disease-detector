@@ -98,24 +98,32 @@ def predict(image: Image.Image) -> dict:
     if image is None:
         return {}
 
-    img_tensor = preprocess(image).unsqueeze(0)
+    try:
+        print("📸 Received image, starting preprocessing...")
+        img_tensor = preprocess(image).unsqueeze(0)
 
-    with torch.no_grad():
-        outputs = model(img_tensor)
+        print("🤖 Running model inference...")
+        with torch.no_grad():
+            outputs = model(img_tensor)
+            
+            # Temperature Scaling
+            temperature = 2.0 
+            probabilities = F.softmax(outputs / temperature, dim=1)[0]
+
+        print("📊 Extracting Top-5 results...")
+        top5_probs, top5_indices = torch.topk(probabilities, k=5)
+
+        results = {}
+        for prob, idx in zip(top5_probs, top5_indices):
+            class_name = CLASS_NAMES[idx.item()]
+            results[class_name] = float(prob.item())
         
-        # Temperature Scaling: Divide logits by T to reduce over-confidence
-        # T > 1 makes the distribution "softer" (less likely to hit 100%)
-        temperature = 2.0 
-        probabilities = F.softmax(outputs / temperature, dim=1)[0]
+        print(f"✅ Prediction complete: {list(results.keys())[0]}")
+        return results
 
-    top5_probs, top5_indices = torch.topk(probabilities, k=5)
-
-    results = {}
-    for prob, idx in zip(top5_probs, top5_indices):
-        class_name = CLASS_NAMES[idx.item()]
-        results[class_name] = prob.item()
-
-    return results
+    except Exception as e:
+        print(f"❌ ERROR during prediction: {str(e)}")
+        return {"Error": str(e)}
 
 
 # ──────────────────────────────────────────────────
