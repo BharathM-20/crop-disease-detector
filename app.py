@@ -102,7 +102,11 @@ def predict(image: Image.Image) -> dict:
 
     with torch.no_grad():
         outputs = model(img_tensor)
-        probabilities = F.softmax(outputs, dim=1)[0]
+        
+        # Temperature Scaling: Divide logits by T to reduce over-confidence
+        # T > 1 makes the distribution "softer" (less likely to hit 100%)
+        temperature = 2.0 
+        probabilities = F.softmax(outputs / temperature, dim=1)[0]
 
     top5_probs, top5_indices = torch.topk(probabilities, k=5)
 
