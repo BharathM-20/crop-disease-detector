@@ -83,6 +83,7 @@ Free-tier HuggingFace Spaces has CPU-only hardware. Kept inference fast by using
 | Crops covered | 13 |
 
 ---
+Source — [PlantVillage Dataset](https://www.kaggle.com/datasets/abdallahalidev/plantvillage-dataset)
 
 ## 🧪 Experiment Tracking
 
